@@ -1,4 +1,4 @@
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { ShoppingCart, Menu, Settings, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -48,6 +48,19 @@ export function Header({ currentPage, onNavigate, cartItemCount, onCartClick }: 
 
           {/* Cart & Mobile Menu */}
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => onNavigate('admin')}
+              className={`p-2 rounded-lg transition-colors ${
+                currentPage === 'admin'
+                  ? 'bg-slate-800 text-amber-400'
+                  : 'hover:bg-slate-800 text-white'
+              }`}
+              aria-label="Admin settings"
+              title="Admin Settings"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+
             <button
               onClick={onCartClick}
               className="relative p-2 hover:bg-slate-800 rounded-lg transition-colors"

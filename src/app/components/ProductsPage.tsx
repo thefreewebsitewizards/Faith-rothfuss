@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Product } from '@/app/types';
 import { ProductCard } from '@/app/components/ProductCard';
 import { ProductDetailModal } from '@/app/components/ProductDetailModal';
-import { products } from '@/app/data/products';
 
 interface ProductsPageProps {
+  products: Product[];
   onAddToCart: (product: Product) => void;
 }
 
-export function ProductsPage({ onAddToCart }: ProductsPageProps) {
+export function ProductsPage({ products, onAddToCart }: ProductsPageProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [filter, setFilter] = useState<'all' | 'core' | 'seasonal'>('all');
 

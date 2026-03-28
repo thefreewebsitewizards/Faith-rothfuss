@@ -78,6 +78,14 @@ export function Footer({ onNavigate }: FooterProps) {
                   Contact Us
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => onNavigate('admin')}
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  Admin Panel
+                </button>
+              </li>
             </ul>
           </div>
 
