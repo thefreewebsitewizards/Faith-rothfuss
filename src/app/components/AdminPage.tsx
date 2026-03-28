@@ -93,6 +93,7 @@ export function AdminPage({
   const [adminPassword, setAdminPassword] = useState('');
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [pendingDeleteProduct, setPendingDeleteProduct] = useState<Product | null>(null);
+  const [isSignOutConfirmOpen, setIsSignOutConfirmOpen] = useState(false);
 
   const usingFirebase = backendMode === 'firebase';
   const canManageProducts = !usingFirebase || isAdminAuthenticated;
@@ -291,6 +292,7 @@ export function AdminPage({
     setAuthSubmitting(true);
     try {
       await onAdminLogout();
+      setIsSignOutConfirmOpen(false);
       setMessage({ type: 'success', text: 'Signed out successfully.' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unable to sign out.';
@@ -420,11 +422,11 @@ export function AdminPage({
                 <p className="text-sm text-slate-500 mt-1">Store ID: {storeId}</p>
               </div>
               <button
-                onClick={handleAdminSignOut}
+                onClick={() => setIsSignOutConfirmOpen(true)}
                 disabled={authSubmitting}
                 className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
               >
-                {authSubmitting ? 'Signing out...' : 'Sign Out'}
+                Sign Out
               </button>
             </div>
           </div>
@@ -732,6 +734,46 @@ export function AdminPage({
                 className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
               >
                 {isMutatingProducts ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSignOutConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60" onClick={() => setIsSignOutConfirmOpen(false)} />
+          <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-5 text-white">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-white/20 p-2">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Sign Out</h3>
+                  <p className="text-sm text-slate-200">You can sign back in at any time.</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm text-slate-600">Are you sure you want to sign out of the admin panel?</p>
+            </div>
+            <div className="px-6 pb-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSignOutConfirmOpen(false)}
+                disabled={authSubmitting}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-60"
+              >
+                Stay Signed In
+              </button>
+              <button
+                type="button"
+                onClick={handleAdminSignOut}
+                disabled={authSubmitting}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-60"
+              >
+                {authSubmitting ? 'Signing out...' : 'Yes, Sign Out'}
               </button>
             </div>
           </div>
