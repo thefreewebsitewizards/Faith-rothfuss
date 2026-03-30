@@ -14,6 +14,7 @@ import { AdminPage } from '@/app/components/AdminPage';
 import { products as initialProducts } from '@/app/data/products';
 import {
   isFirebaseBackendConfigured,
+  getFirebaseConfigurationErrorMessage,
   firebaseStoreId,
   onAdminAuthStateChange,
   getUserStoreIdFromClaims,
@@ -63,18 +64,26 @@ function getPageFromHash(): Page {
 }
 
 export default function App() {
+  const isProductionBuild = import.meta.env.PROD;
+  const shouldUseLocalFallback = !isProductionBuild && !isFirebaseBackendConfigured;
   const [currentPage, setCurrentPage] = useState<Page>(getPageFromHash);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>(
+    shouldUseLocalFallback ? initialProducts : []
+  );
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [adminUser, setAdminUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(isFirebaseBackendConfigured);
+  const [authLoading, setAuthLoading] = useState(isFirebaseBackendConfigured || !shouldUseLocalFallback);
   const [isMutatingProducts, setIsMutatingProducts] = useState(false);
-  const [integrationError, setIntegrationError] = useState<string | null>(null);
+  const [integrationError, setIntegrationError] = useState<string | null>(
+    !isFirebaseBackendConfigured && isProductionBuild
+      ? `${getFirebaseConfigurationErrorMessage()}. Add these env vars in Vercel Project Settings → Environment Variables, then redeploy.`
+      : null
+  );
   const [activeStoreId, setActiveStoreId] = useState(firebaseStoreId);
-  const [isAdminAuthorized, setIsAdminAuthorized] = useState(false);
+  const [isAdminAuthorized, setIsAdminAuthorized] = useState(shouldUseLocalFallback);
 
-  const backendMode = isFirebaseBackendConfigured ? 'firebase' : 'local';
+  const backendMode = shouldUseLocalFallback ? 'local' : 'firebase';
 
   const navigateTo = (page: string) => {
     const targetPage: Page = isPage(page) ? page : 'home';
@@ -103,6 +112,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!isFirebaseBackendConfigured && isProductionBuild) {
+      setAuthLoading(false);
+      return;
+    }
     if (!isFirebaseBackendConfigured) {
       return;
     }
@@ -239,6 +252,11 @@ export default function App() {
   };
 
   const handleCreateProduct = async (product: Product) => {
+    if (!isFirebaseBackendConfigured && isProductionBuild) {
+      const errorMessage = `${getFirebaseConfigurationErrorMessage()}. Add Vercel env vars and redeploy.`;
+      setIntegrationError(errorMessage);
+      throw new Error(errorMessage);
+    }
     if (backendMode === 'local') {
       setProducts((prevProducts) => [product, ...prevProducts]);
       return;
@@ -258,6 +276,11 @@ export default function App() {
   };
 
   const handleUpdateProduct = async (updatedProduct: Product) => {
+    if (!isFirebaseBackendConfigured && isProductionBuild) {
+      const errorMessage = `${getFirebaseConfigurationErrorMessage()}. Add Vercel env vars and redeploy.`;
+      setIntegrationError(errorMessage);
+      throw new Error(errorMessage);
+    }
     if (backendMode === 'local') {
       setProducts((prevProducts) =>
         prevProducts.map((product) => (product.id === updatedProduct.id ? updatedProduct : product))
@@ -279,6 +302,11 @@ export default function App() {
   };
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!isFirebaseBackendConfigured && isProductionBuild) {
+      const errorMessage = `${getFirebaseConfigurationErrorMessage()}. Add Vercel env vars and redeploy.`;
+      setIntegrationError(errorMessage);
+      throw new Error(errorMessage);
+    }
     if (backendMode === 'local') {
       setProducts((prevProducts) => prevProducts.filter((product) => product.id !== productId));
       setCartItems((prevItems) => prevItems.filter((item) => item.product.id !== productId));
@@ -301,6 +329,11 @@ export default function App() {
   const handleAdminLogin = async (email: string, password: string) => {
     setIntegrationError(null);
     try {
+      if (!isFirebaseBackendConfigured) {
+        throw new Error(
+          `${getFirebaseConfigurationErrorMessage()}. Add these variables in Vercel and redeploy.`
+        );
+      }
       const credentials = await adminSignIn(email, password);
 
       if (backendMode === 'firebase' && firebaseStoreId) {
@@ -385,7 +418,7 @@ export default function App() {
             onDeleteProduct={handleDeleteProduct}
             backendMode={backendMode}
             storeId={activeStoreId || firebaseStoreId}
-            isAdminAuthenticated={backendMode === 'local' ? true : isAdminAuthorized}
+            isAdminAuthenticated={isAdminAuthorized}
             authLoading={authLoading}
             isMutatingProducts={isMutatingProducts}
             integrationError={integrationError}

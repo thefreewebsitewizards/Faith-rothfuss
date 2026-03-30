@@ -15,6 +15,13 @@ const firebaseConfig = {
 
 export const firebaseStoreId = import.meta.env.VITE_FIREBASE_STORE_ID || import.meta.env.VITE_STORE_ID || '';
 export const firebaseFunctionsRegion = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'us-central1';
+export const missingFirebaseEnvKeys = [
+  !firebaseConfig.apiKey ? 'VITE_FIREBASE_API_KEY' : '',
+  !firebaseConfig.authDomain ? 'VITE_FIREBASE_AUTH_DOMAIN' : '',
+  !firebaseConfig.projectId ? 'VITE_FIREBASE_PROJECT_ID' : '',
+  !firebaseConfig.appId ? 'VITE_FIREBASE_APP_ID' : '',
+  !firebaseStoreId ? 'VITE_FIREBASE_STORE_ID' : ''
+].filter(Boolean);
 
 export const isFirebaseBackendConfigured = Boolean(
   firebaseConfig.apiKey &&
@@ -23,6 +30,16 @@ export const isFirebaseBackendConfigured = Boolean(
     firebaseConfig.appId &&
     firebaseStoreId
 );
+
+export function getFirebaseConfigurationErrorMessage() {
+  if (isFirebaseBackendConfigured) {
+    return '';
+  }
+  if (missingFirebaseEnvKeys.length === 0) {
+    return 'Firebase configuration is missing.';
+  }
+  return `Firebase is not configured. Missing: ${missingFirebaseEnvKeys.join(', ')}`;
+}
 
 let appInstance: ReturnType<typeof initializeApp> | null = null;
 
